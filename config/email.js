@@ -431,16 +431,6 @@ const sendOrderStatusUpdate = async (order, previousStatus) => {
     return { success: false, error: error.message };
   }
 };
-    };
-
-    const result = await transporter.sendMail(mailOptions);
-    console.log("Order status update email sent:", result.messageId);
-    return { success: true, messageId: result.messageId };
-  } catch (error) {
-    console.error("Error sending order status update email:", error);
-    return { success: false, error: error.message };
-  }
-};
 
 // Send new order notification to admin
 const sendAdminNewOrderNotification = async (order) => {
