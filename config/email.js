@@ -1,22 +1,33 @@
 const nodemailer = require("nodemailer");
 
-// Create transporter with Gmail configuration
+// Create transporter with Gmail configuration (optimized for serverless)
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // use SSL
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  pool: false, // Disable connection pooling for serverless
+  maxConnections: 1,
+  rateDelta: 20000,
+  rateLimit: 5,
+  socketTimeout: 60000, // 60 seconds
+  connectionTimeout: 30000, // 30 seconds
+  greetingTimeout: 30000,
 });
 
-// Verify transporter connection
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("Email transporter error:", error);
-  } else {
-    console.log("Email server is ready to send messages");
-  }
-});
+// Skip verification in production (can cause issues in serverless)
+if (process.env.NODE_ENV !== "production") {
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error("Email transporter error:", error);
+    } else {
+      console.log("Email server is ready to send messages");
+    }
+  });
+}
 
 // Company info for email templates
 const companyInfo = {
