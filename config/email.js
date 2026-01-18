@@ -1,5 +1,10 @@
 const { Resend } = require("resend");
 
+// Check if API key is available
+if (!process.env.RESEND_API_KEY) {
+  console.error("WARNING: RESEND_API_KEY is not set. Emails will not be sent.");
+}
+
 // Initialize Resend with API key
 const resend = new Resend(process.env.RESEND_API_KEY);
 
