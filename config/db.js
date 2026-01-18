@@ -7,6 +7,11 @@ if (!cached) {
 }
 
 const connectDB = async () => {
+  // Check if MongoDB URI is configured
+  if (!process.env.MONGODB_URI) {
+    throw new Error("MONGODB_URI environment variable is not set");
+  }
+
   // Return existing connection if available
   if (cached.conn) {
     return cached.conn;
