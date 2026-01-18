@@ -6,12 +6,14 @@ const {
   createProduct,
   updateProduct,
   deleteProduct,
+  validateProducts,
 } = require("../controllers/productController");
 const { protect, authorize } = require("../middlewares/authMiddleware");
 const { upload } = require("../middlewares/uploadMiddleware");
 
 // Public routes
 router.get("/", getProducts);
+router.post("/validate", validateProducts);
 router.get("/:id", getProduct);
 
 // Protected routes (Admin only)

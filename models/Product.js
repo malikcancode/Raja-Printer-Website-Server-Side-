@@ -1,5 +1,22 @@
 const mongoose = require("mongoose");
 
+// Shipping rules schema for local and international shipping
+const shippingRulesSchema = new mongoose.Schema(
+  {
+    basePrice: {
+      type: Number,
+      default: 0,
+      min: [0, "Base shipping price cannot be negative"],
+    },
+    perKgRate: {
+      type: Number,
+      default: 0,
+      min: [0, "Per kg rate cannot be negative"],
+    },
+  },
+  { _id: false },
+);
+
 const productSchema = new mongoose.Schema(
   {
     name: {
@@ -61,6 +78,41 @@ const productSchema = new mongoose.Schema(
     description: {
       type: String,
       default: "",
+      maxlength: [2000, "Description cannot exceed 2000 characters"],
+    },
+    // Specifications as array of key-value pairs
+    specifications: {
+      type: [
+        {
+          key: { type: String, trim: true },
+          value: { type: String, trim: true },
+        },
+      ],
+      default: [],
+    },
+    // Weight in kilograms for shipping calculation
+    weight: {
+      type: Number,
+      default: 1,
+      min: [0.1, "Weight must be at least 0.1 kg"],
+    },
+    // Shipping rules for this product
+    shippingRules: {
+      local: {
+        type: shippingRulesSchema,
+        default: () => ({ basePrice: 5, perKgRate: 2 }),
+      },
+      international: {
+        type: shippingRulesSchema,
+        default: () => ({ basePrice: 15, perKgRate: 5 }),
+      },
+    },
+    // Local country code for determining local vs international shipping
+    localCountry: {
+      type: String,
+      default: "US",
+      uppercase: true,
+      trim: true,
     },
   },
   {

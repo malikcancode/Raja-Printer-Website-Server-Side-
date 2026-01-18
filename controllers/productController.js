@@ -106,6 +106,15 @@ exports.createProduct = async (req, res) => {
         .filter(Boolean);
     }
 
+    // Parse specifications if it's a string (JSON)
+    if (typeof productData.specifications === "string") {
+      try {
+        productData.specifications = JSON.parse(productData.specifications);
+      } catch (e) {
+        productData.specifications = [];
+      }
+    }
+
     const product = await Product.create(productData);
 
     res.status(201).json({
@@ -172,6 +181,15 @@ exports.updateProduct = async (req, res) => {
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean);
+    }
+
+    // Parse specifications if it's a string (JSON)
+    if (typeof updateData.specifications === "string") {
+      try {
+        updateData.specifications = JSON.parse(updateData.specifications);
+      } catch (e) {
+        updateData.specifications = [];
+      }
     }
 
     product = await Product.findByIdAndUpdate(req.params.id, updateData, {
@@ -245,6 +263,48 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error while deleting product",
+    });
+  }
+};
+
+// @desc    Validate product IDs (check which still exist)
+// @route   POST /api/products/validate
+// @access  Public
+exports.validateProducts = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide an array of product IDs",
+      });
+    }
+
+    // Find all products that exist with these IDs
+    const existingProducts = await Product.find({
+      _id: { $in: ids },
+    }).select("_id name price image category stock");
+
+    // Create a map of existing IDs
+    const existingIds = existingProducts.map((p) => p._id.toString());
+
+    // Identify which IDs no longer exist
+    const deletedIds = ids.filter((id) => !existingIds.includes(id));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        existingProducts,
+        existingIds,
+        deletedIds,
+      },
+    });
+  } catch (error) {
+    console.error("Validate Products Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while validating products",
     });
   }
 };

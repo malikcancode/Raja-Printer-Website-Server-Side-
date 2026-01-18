@@ -29,6 +29,9 @@ connectDB();
 // API Routes
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/products", require("./routes/productRoutes"));
+app.use("/api/orders", require("./routes/orderRoutes"));
+app.use("/api/contact", require("./routes/contactRoutes"));
+app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 
 // Basic Routes
 app.get("/", (req, res) => {
@@ -44,7 +47,6 @@ app.get("/api/health", (req, res) => {
 });
 
 // Additional routes can be added here
-// app.use('/api/orders', require('./routes/orderRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
