@@ -1,41 +1,16 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
-// Create transporter with Gmail configuration (optimized for serverless)
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // use SSL
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  pool: false, // Disable connection pooling for serverless
-  maxConnections: 1,
-  rateDelta: 20000,
-  rateLimit: 5,
-  socketTimeout: 60000, // 60 seconds
-  connectionTimeout: 30000, // 30 seconds
-  greetingTimeout: 30000,
-});
-
-// Skip verification in production (can cause issues in serverless)
-if (process.env.NODE_ENV !== "production") {
-  transporter.verify((error, success) => {
-    if (error) {
-      console.error("Email transporter error:", error);
-    } else {
-      console.log("Email server is ready to send messages");
-    }
-  });
-}
+// Initialize Resend with API key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Company info for email templates
 const companyInfo = {
   name: "Raja Business Systems",
-  email: "personalfiverr3132@gmail.com",
+  email: "onboarding@resend.dev", // Use Resend's test email or your verified domain
+  adminEmail: process.env.EMAIL_USER || "personalfiverr3132@gmail.com",
   phone: "+92 321 5845098",
   address: "Lahore, Pakistan",
-  website: "http://localhost:3000",
+  website: process.env.FRONTEND_URL || "http://localhost:3000",
 };
 
 // Email template styles
@@ -416,16 +391,15 @@ const adminNewOrderTemplate = (order) => {
 // Send order confirmation email to customer
 const sendOrderConfirmation = async (order) => {
   try {
-    const mailOptions = {
-      from: `"${companyInfo.name}" <${companyInfo.email}>`,
-      to: order.customerEmail,
+    const result = await resend.emails.send({
+      from: `${companyInfo.name} <${companyInfo.email}>`,
+      to: [order.customerEmail],
       subject: `Order Confirmed! #${order.orderNumber || order._id} - ${companyInfo.name}`,
       html: orderConfirmationTemplate(order),
-    };
+    });
 
-    const result = await transporter.sendMail(mailOptions);
-    console.log("Order confirmation email sent:", result.messageId);
-    return { success: true, messageId: result.messageId };
+    console.log("Order confirmation email sent:", result.data?.id);
+    return { success: true, messageId: result.data?.id };
   } catch (error) {
     console.error("Error sending order confirmation email:", error);
     return { success: false, error: error.message };
@@ -443,11 +417,20 @@ const sendOrderStatusUpdate = async (order, previousStatus) => {
     };
     const emoji = statusEmoji[order.status.toLowerCase()] || "📋";
 
-    const mailOptions = {
-      from: `"${companyInfo.name}" <${companyInfo.email}>`,
-      to: order.customerEmail,
+    const result = await resend.emails.send({
+      from: `${companyInfo.name} <${companyInfo.email}>`,
+      to: [order.customerEmail],
       subject: `${emoji} Order ${order.status} - #${order.orderNumber || order._id}`,
       html: orderStatusUpdateTemplate(order, previousStatus),
+    });
+
+    console.log("Order status update email sent:", result.data?.id);
+    return { success: true, messageId: result.data?.id };
+  } catch (error) {
+    console.error("Error sending order status update email:", error);
+    return { success: false, error: error.message };
+  }
+};
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -462,16 +445,15 @@ const sendOrderStatusUpdate = async (order, previousStatus) => {
 // Send new order notification to admin
 const sendAdminNewOrderNotification = async (order) => {
   try {
-    const mailOptions = {
-      from: `"${companyInfo.name}" <${companyInfo.email}>`,
-      to: companyInfo.email, // Send to admin email
+    const result = await resend.emails.send({
+      from: `${companyInfo.name} <${companyInfo.email}>`,
+      to: [companyInfo.adminEmail],
       subject: `🔔 New Order #${order.orderNumber || order._id} - PKR ${order.totalPrice.toLocaleString()}`,
       html: adminNewOrderTemplate(order),
-    };
+    });
 
-    const result = await transporter.sendMail(mailOptions);
-    console.log("Admin notification email sent:", result.messageId);
-    return { success: true, messageId: result.messageId };
+    console.log("Admin notification email sent:", result.data?.id);
+    return { success: true, messageId: result.data?.id };
   } catch (error) {
     console.error("Error sending admin notification email:", error);
     return { success: false, error: error.message };
@@ -543,17 +525,16 @@ const contactEmailTemplate = (data) => {
 // Send contact form email to admin
 const sendContactEmail = async (data) => {
   try {
-    const mailOptions = {
-      from: `"${data.name}" <${companyInfo.email}>`,
+    const result = await resend.emails.send({
+      from: `${companyInfo.name} <${companyInfo.email}>`,
       replyTo: data.email,
-      to: companyInfo.email,
+      to: [companyInfo.adminEmail],
       subject: `📬 Contact Form: ${data.subject} - from ${data.name}`,
       html: contactEmailTemplate(data),
-    };
+    });
 
-    const result = await transporter.sendMail(mailOptions);
-    console.log("Contact form email sent:", result.messageId);
-    return { success: true, messageId: result.messageId };
+    console.log("Contact form email sent:", result.data?.id);
+    return { success: true, messageId: result.data?.id };
   } catch (error) {
     console.error("Error sending contact form email:", error);
     return { success: false, error: error.message };
@@ -561,7 +542,7 @@ const sendContactEmail = async (data) => {
 };
 
 module.exports = {
-  transporter,
+  resend,
   sendOrderConfirmation,
   sendOrderStatusUpdate,
   sendAdminNewOrderNotification,
