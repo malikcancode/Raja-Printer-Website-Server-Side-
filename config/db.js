@@ -1,40 +1,42 @@
 const mongoose = require("mongoose");
 
-let isConnected = false;
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
 
 const connectDB = async () => {
-  if (isConnected) {
-    console.log("Using existing MongoDB connection");
-    return;
+  // Return existing connection if available
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  // If no promise exists, create one
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+    };
+
+    cached.promise = mongoose
+      .connect(process.env.MONGODB_URI, opts)
+      .then((mongoose) => {
+        console.log("MongoDB Connected");
+        return mongoose;
+      });
   }
 
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-    });
-
-    isConnected = true;
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-
-    // Handle connection events
-    mongoose.connection.on("error", (err) => {
-      console.error("MongoDB connection error:", err);
-      isConnected = false;
-    });
-
-    mongoose.connection.on("disconnected", () => {
-      console.log("MongoDB disconnected");
-      isConnected = false;
-    });
-
-    return conn;
+    cached.conn = await cached.promise;
   } catch (error) {
+    cached.promise = null;
     console.error(`MongoDB Connection Error: ${error.message}`);
-    isConnected = false;
-    // Don't exit process in serverless environment
     throw error;
   }
+
+  return cached.conn;
 };
 
 module.exports = connectDB;

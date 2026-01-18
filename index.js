@@ -45,8 +45,16 @@ app.options("*", cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Connect to Database
-connectDB();
+// Database connection middleware - connects on first request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("Database connection failed:", error.message);
+    res.status(500).json({ message: "Database connection failed" });
+  }
+});
 
 // API Routes
 app.use("/api/auth", require("./routes/authRoutes"));
