@@ -38,8 +38,8 @@ const corsOptions = {
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests explicitly
-app.options("*", cors(corsOptions));
+// Handle preflight requests explicitly (Express 5.x syntax)
+app.options("/{*path}", cors(corsOptions));
 
 // Body parsing middleware
 app.use(express.json());
