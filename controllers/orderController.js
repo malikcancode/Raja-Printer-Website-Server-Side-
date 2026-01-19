@@ -5,6 +5,7 @@ const {
   sendOrderStatusUpdate,
   sendAdminNewOrderNotification,
 } = require("../config/email");
+const { createNotification } = require("./notificationController");
 
 /**
  * Calculate shipping cost for a single product based on destination
@@ -428,6 +429,48 @@ exports.updateOrderStatus = async (req, res) => {
           }
         })
         .catch((err) => console.error("Status update email error:", err));
+
+      // Create notification if order has a user OR find user by email
+      try {
+        const User = require("../models/User");
+        let userId = order.user;
+
+        // If no user linked, try to find user by email
+        if (!userId && order.customerEmail) {
+          const user = await User.findOne({ email: order.customerEmail });
+          if (user) {
+            userId = user._id;
+            // Also update the order to link the user for future
+            order.user = userId;
+            await order.save();
+          }
+        }
+
+        if (userId) {
+          const statusMessages = {
+            pending: "Your order is pending confirmation",
+            processing: "Your order is being processed",
+            shipped: "Your order has been shipped",
+            delivered: "Your order has been delivered",
+            cancelled: "Your order has been cancelled",
+          };
+
+          await createNotification(
+            userId,
+            "order_status",
+            "Order Status Updated",
+            `Order #${order._id.toString().slice(-8).toUpperCase()}: ${statusMessages[status]}`,
+            order._id,
+          );
+          console.log(`Notification created for user ${userId}`);
+        } else {
+          console.log(
+            `No user found for order ${order._id}, skipping notification`,
+          );
+        }
+      } catch (notifError) {
+        console.error("Failed to create notification:", notifError);
+      }
     }
 
     res.status(200).json({

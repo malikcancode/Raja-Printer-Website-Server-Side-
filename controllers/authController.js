@@ -299,3 +299,112 @@ exports.updateProfile = async (req, res) => {
     });
   }
 };
+
+// @desc    Get all users (Admin only)
+// @route   GET /api/auth/users
+// @access  Private/Admin
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({})
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      data: users,
+    });
+  } catch (error) {
+    console.error("Get All Users Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching users",
+    });
+  }
+};
+
+// @desc    Toggle user active status (Admin only)
+// @route   PUT /api/auth/users/:id/toggle-status
+// @access  Private/Admin
+exports.toggleUserStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Prevent deactivating own account
+    if (user._id.toString() === req.user.id) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot deactivate your own account",
+      });
+    }
+
+    user.isActive = !user.isActive;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: `User ${user.isActive ? "activated" : "deactivated"} successfully`,
+      data: user,
+    });
+  } catch (error) {
+    console.error("Toggle User Status Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while toggling user status",
+    });
+  }
+};
+
+// @desc    Delete user (Admin only)
+// @route   DELETE /api/auth/users/:id
+// @access  Private/Admin
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Prevent deleting own account
+    if (user._id.toString() === req.user.id) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete your own account",
+      });
+    }
+
+    // Delete user's profile picture from Cloudinary if exists
+    if (user.cloudinaryId) {
+      const cloudinary = require("cloudinary").v2;
+      try {
+        await cloudinary.uploader.destroy(user.cloudinaryId);
+      } catch (cloudinaryError) {
+        console.error("Cloudinary delete error:", cloudinaryError);
+      }
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete User Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while deleting user",
+    });
+  }
+};

@@ -308,3 +308,44 @@ exports.validateProducts = async (req, res) => {
     });
   }
 };
+
+// @desc    Get all unique categories with product count
+// @route   GET /api/products/categories/list
+// @access  Public
+exports.getCategories = async (req, res) => {
+  try {
+    // Get all unique categories with product count
+    const categories = await Product.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+          image: { $first: "$image" }, // Take first product image as category image
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          name: "$_id",
+          count: 1,
+          image: 1,
+        },
+      },
+      {
+        $sort: { name: 1 },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      count: categories.length,
+      data: categories,
+    });
+  } catch (error) {
+    console.error("Get Categories Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching categories",
+    });
+  }
+};
