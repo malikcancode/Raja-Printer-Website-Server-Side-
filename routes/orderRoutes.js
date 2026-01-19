@@ -14,10 +14,12 @@ const { protect, authorize } = require("../middlewares/authMiddleware");
 // Public routes
 router.post("/calculate-shipping", calculateShipping);
 router.post("/", createOrder);
-router.get("/:id", getOrder); // Can be accessed with email query param
 
-// Protected routes
+// Protected routes - Must come before :id route
 router.get("/my-orders", protect, getUserOrders);
+
+// Public route - Can be accessed with email query param
+router.get("/:id", getOrder);
 
 // Admin routes
 router.get("/", protect, authorize("admin"), getOrders);

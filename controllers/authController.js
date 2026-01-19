@@ -50,6 +50,7 @@ exports.register = async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          profilePicture: user.profilePicture || "",
         },
         token,
       },
@@ -128,6 +129,7 @@ exports.login = async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          profilePicture: user.profilePicture || "",
         },
         token,
       },
@@ -163,6 +165,7 @@ exports.getMe = async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          profilePicture: user.profilePicture || "",
         },
       },
     });
@@ -232,6 +235,67 @@ exports.updatePassword = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error",
+    });
+  }
+};
+
+// @desc    Update user profile
+// @route   PUT /api/auth/updateprofile
+// @access  Private
+exports.updateProfile = async (req, res) => {
+  const { deleteImage } = require("../middlewares/uploadMiddleware");
+
+  try {
+    const { name } = req.body;
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Update name if provided
+    if (name) {
+      user.name = name;
+    }
+
+    // Update profile picture if file uploaded
+    if (req.file) {
+      // Delete old image from Cloudinary if exists
+      if (user.cloudinaryId) {
+        try {
+          await deleteImage(user.cloudinaryId);
+        } catch (error) {
+          console.error("Error deleting old profile picture:", error);
+        }
+      }
+
+      user.profilePicture = req.file.path;
+      user.cloudinaryId = req.file.filename;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          profilePicture: user.profilePicture,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating profile",
     });
   }
 };

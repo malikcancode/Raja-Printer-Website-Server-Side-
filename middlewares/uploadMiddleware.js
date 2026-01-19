@@ -19,6 +19,18 @@ const storage = new CloudinaryStorage({
   },
 });
 
+// Configure Cloudinary storage for profile pictures
+const profileStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "printer-website/profiles",
+    allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+    transformation: [
+      { width: 500, height: 500, crop: "fill", gravity: "face" },
+    ],
+  },
+});
+
 // File filter
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
@@ -28,12 +40,21 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Create multer upload instance
+// Create multer upload instance for products
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+});
+
+// Create multer upload instance for profile pictures
+const profileUpload = multer({
+  storage: profileStorage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 2MB limit for profile pictures
   },
 });
 
@@ -48,4 +69,4 @@ const deleteImage = async (publicId) => {
   }
 };
 
-module.exports = { upload, deleteImage, cloudinary };
+module.exports = { upload, profileUpload, deleteImage, cloudinary };
