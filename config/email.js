@@ -16,10 +16,10 @@ const transporter = nodemailer.createTransport({
 
 // Company info for email templates
 const companyInfo = {
-  name: "Raja Business Systems",
-  email: process.env.EMAIL_USER || "personalfiverr3132@gmail.com",
-  adminEmail: process.env.EMAIL_USER || "personalfiverr3132@gmail.com",
-  phone: "+92 321 5845098",
+  name: "CopyTech.pk",
+  email: process.env.EMAIL_USER || "copytech1966@gmail.com",
+  adminEmail: process.env.EMAIL_USER || "copytech1966@gmail.com",
+  phone: "+92 317-5223143",
   address: "Lahore, Pakistan",
   website: process.env.FRONTEND_URL || "http://localhost:3000",
 };
@@ -517,7 +517,7 @@ const contactEmailTemplate = (data) => {
 
         <!-- Footer -->
         <div style="background-color: #1e293b; padding: 20px; text-align: center;">
-          <p style="color: #94a3b8; margin: 0; font-size: 12px;">This message was sent from the Raja Business Systems website contact form</p>
+          <p style="color: #94a3b8; margin: 0; font-size: 12px;">This message was sent from the CopyTech.pk website contact form</p>
           <p style="color: #64748b; margin: 10px 0 0; font-size: 11px;">© ${new Date().getFullYear()} ${companyInfo.name}. All rights reserved.</p>
         </div>
       </div>

@@ -47,7 +47,7 @@ const newsletterWelcomeTemplate = (email) => {
     <body>
       <div class="container">
         <div class="header">
-          <h1>🎉 Welcome to Raja Business Systems!</h1>
+          <h1>🎉 Welcome to CopyTech.pk!</h1>
           <p>Thank you for subscribing to our newsletter</p>
         </div>
         
@@ -56,7 +56,7 @@ const newsletterWelcomeTemplate = (email) => {
           
           <p class="text">
             We're thrilled to have you join our community of printing solutions enthusiasts! 
-            You've successfully subscribed to the Raja Business Systems newsletter.
+            You've successfully subscribed to the CopyTech.pk newsletter.
           </p>
           
           <div class="benefits">
@@ -88,9 +88,9 @@ const newsletterWelcomeTemplate = (email) => {
         </div>
         
         <div class="footer">
-          <p><strong>Raja Business Systems</strong></p>
-          <p>Your Trusted Partner for Premium Office Automation Solutions</p>
-          <p>Saddar, Rawalpindi, Pakistan</p>
+          <p><strong>CopyTech.pk</strong></p>
+          <p>Your Trusted Partner for Premium Printing Solutions</p>
+          <p>Lahore, Pakistan</p>
           
           <div class="social-icons">
             <a href="#">Facebook</a> | 
@@ -100,7 +100,7 @@ const newsletterWelcomeTemplate = (email) => {
           
           <p style="margin-top: 20px; font-size: 12px; color: #6b7280;">
             You're receiving this email because you subscribed to our newsletter.<br>
-            © ${new Date().getFullYear()} Raja Business Systems. All rights reserved.
+            © ${new Date().getFullYear()} CopyTech.pk. All rights reserved.
           </p>
         </div>
       </div>
@@ -113,9 +113,9 @@ const newsletterWelcomeTemplate = (email) => {
 const sendWelcomeEmail = async (email) => {
   try {
     await transporter.sendMail({
-      from: `"Raja Business Systems" <${process.env.EMAIL_USER}>`,
+      from: `"CopyTech.pk" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: "🎉 Welcome to Raja Business Systems Newsletter!",
+      subject: "🎉 Welcome to CopyTech.pk Newsletter!",
       html: newsletterWelcomeTemplate(email),
     });
     console.log(`✅ Welcome email sent to: ${email}`);
