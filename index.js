@@ -64,6 +64,7 @@ app.use("/api/contact", require("./routes/contactRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/api/newsletter", require("./routes/newsletterRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
+app.use("/api/shipping", require("./routes/shippingRoutes"));
 
 // Basic Routes
 app.get("/", (req, res) => {

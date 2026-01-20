@@ -132,11 +132,15 @@ exports.createOrder = async (req, res) => {
     const {
       items,
       shippingAddress,
+      shippingDetails,
       customerName,
       customerEmail,
       customerPhone,
       paymentMethod,
       orderNotes,
+      itemsPrice: providedItemsPrice,
+      shippingPrice: providedShippingPrice,
+      totalPrice: providedTotalPrice,
     } = req.body;
 
     // Validation
@@ -161,9 +165,16 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // Recalculate prices on backend to prevent manipulation
-    let itemsPrice = 0;
-    let totalShippingCost = 0;
+    // Verify shipping details are provided (from shipping zone calculation)
+    if (!shippingDetails || !shippingDetails.zoneId) {
+      return res.status(400).json({
+        success: false,
+        message: "Please calculate shipping before placing order",
+      });
+    }
+
+    // Calculate items price to verify (prevent price manipulation)
+    let calculatedItemsPrice = 0;
     const orderItems = [];
 
     for (const item of items) {
@@ -192,14 +203,7 @@ exports.createOrder = async (req, res) => {
       }
 
       const itemPrice = product.price * item.quantity;
-      const shippingCost = calculateProductShipping(
-        product,
-        item.quantity,
-        shippingAddress.country,
-      );
-
-      itemsPrice += itemPrice;
-      totalShippingCost += shippingCost;
+      calculatedItemsPrice += itemPrice;
 
       orderItems.push({
         product: product._id,
@@ -208,7 +212,7 @@ exports.createOrder = async (req, res) => {
         price: product.price,
         weight: product.weight,
         image: product.image,
-        shippingCost: shippingCost,
+        shippingCost: 0, // Individual shipping cost not applicable with zone-based shipping
       });
 
       // Reduce stock
@@ -216,6 +220,17 @@ exports.createOrder = async (req, res) => {
       await product.save();
     }
 
+    // Verify items price matches (allow small floating point differences)
+    if (Math.abs(calculatedItemsPrice - providedItemsPrice) > 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Price mismatch detected. Please refresh and try again.",
+      });
+    }
+
+    // Use the shipping price from shipping zone calculation
+    const totalShippingCost = providedShippingPrice || 0;
+    const itemsPrice = calculatedItemsPrice;
     const totalPrice = itemsPrice + totalShippingCost;
 
     // Create order
@@ -226,6 +241,7 @@ exports.createOrder = async (req, res) => {
       customerPhone: customerPhone || "",
       items: orderItems,
       shippingAddress,
+      shippingDetails: shippingDetails || {},
       itemsPrice: Math.round(itemsPrice * 100) / 100,
       shippingPrice: Math.round(totalShippingCost * 100) / 100,
       taxPrice: 0,

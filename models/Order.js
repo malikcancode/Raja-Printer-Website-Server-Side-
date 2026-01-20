@@ -118,6 +118,20 @@ const orderSchema = new mongoose.Schema(
       type: shippingAddressSchema,
       required: true,
     },
+    // Shipping details
+    shippingDetails: {
+      zoneId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ShippingZone",
+      },
+      zoneName: String,
+      deliveryTime: String,
+      totalWeight: Number,
+      baseShippingPrice: Number,
+      extraWeightCharge: Number,
+      freeShippingApplied: Boolean,
+      shippingMessage: String,
+    },
     // Pricing breakdown
     itemsPrice: {
       type: Number,
@@ -144,6 +158,10 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
       default: "pending",
+    },
+    cancelReason: {
+      type: String,
+      default: "",
     },
     isPaid: {
       type: Boolean,
