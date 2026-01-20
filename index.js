@@ -38,9 +38,6 @@ const corsOptions = {
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests explicitly
-app.options("*", cors(corsOptions));
-
 // Additional CORS headers for Vercel
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -56,6 +53,12 @@ app.use((req, res, next) => {
       "Content-Type, Authorization, X-Requested-With, Accept",
     );
   }
+
+  // Handle preflight OPTIONS requests
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
   next();
 });
 
