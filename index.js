@@ -38,8 +38,26 @@ const corsOptions = {
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests explicitly (Express 5.x syntax)
-app.options("/{*path}", cors(corsOptions));
+// Handle preflight requests explicitly
+app.options("*", cors(corsOptions));
+
+// Additional CORS headers for Vercel
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin) || !origin) {
+    res.header("Access-Control-Allow-Origin", origin || "*");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+    );
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, X-Requested-With, Accept",
+    );
+  }
+  next();
+});
 
 // Body parsing middleware
 app.use(express.json());
