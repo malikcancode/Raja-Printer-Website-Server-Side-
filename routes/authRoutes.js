@@ -6,6 +6,7 @@ const {
   getMe,
   updatePassword,
   updateProfile,
+  updateProfileWithPicture,
   getAllUsers,
   toggleUserStatus,
   deleteUser,
@@ -20,11 +21,12 @@ router.post("/login", login);
 // Protected routes (require authentication)
 router.get("/me", protect, getMe);
 router.put("/updatepassword", protect, updatePassword);
+router.put("/profile", protect, updateProfile);
 router.put(
   "/updateprofile",
   protect,
   profileUpload.single("profilePicture"),
-  updateProfile,
+  updateProfileWithPicture,
 );
 
 // Admin only routes

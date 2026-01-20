@@ -143,6 +143,80 @@ exports.login = async (req, res) => {
   }
 };
 
+// @desc    Update user profile (name and password)
+// @route   PUT /api/auth/profile
+// @access  Private
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, currentPassword, newPassword } = req.body;
+
+    // Find user with password field
+    const user = await User.findById(req.user.id).select("+password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Update name if provided
+    if (name && name.trim()) {
+      user.name = name.trim();
+    }
+
+    // Update password if provided
+    if (newPassword) {
+      // Verify current password
+      if (!currentPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Current password is required to change password",
+        });
+      }
+
+      const isPasswordCorrect = await user.comparePassword(currentPassword);
+      if (!isPasswordCorrect) {
+        return res.status(401).json({
+          success: false,
+          message: "Current password is incorrect",
+        });
+      }
+
+      // Validate new password length
+      if (newPassword.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: "New password must be at least 6 characters long",
+        });
+      }
+
+      user.password = newPassword;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profilePicture: user.profilePicture || "",
+        isAdmin: user.role === "admin",
+      },
+    });
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error during profile update",
+    });
+  }
+};
+
 // @desc    Get current logged in user
 // @route   GET /api/auth/me
 // @access  Private
@@ -239,10 +313,10 @@ exports.updatePassword = async (req, res) => {
   }
 };
 
-// @desc    Update user profile
+// @desc    Update user profile with picture
 // @route   PUT /api/auth/updateprofile
 // @access  Private
-exports.updateProfile = async (req, res) => {
+exports.updateProfileWithPicture = async (req, res) => {
   const { deleteImage } = require("../middlewares/uploadMiddleware");
 
   try {
