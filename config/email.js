@@ -546,10 +546,115 @@ const sendContactEmail = async (data) => {
   }
 };
 
+// Quote Request Email Template
+const quoteEmailTemplate = (data) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">💼 New B2B Quote Request</h1>
+          <p style="color: #dbeafe; margin: 10px 0 0; font-size: 14px;">A business is requesting a quote</p>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 30px;">
+          <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 20px;">
+            <p style="margin: 0; color: #1e40af; font-weight: bold; font-size: 14px;">🏢 Business Information</p>
+          </div>
+
+          <div style="background-color: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-size: 14px; width: 40%;"><strong>Business Name:</strong></td>
+                <td style="padding: 8px 0; color: #1f2937; font-size: 14px;">${data.businessName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-size: 14px;"><strong>Contact Person:</strong></td>
+                <td style="padding: 8px 0; color: #1f2937; font-size: 14px;">${data.contactPerson}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-size: 14px;"><strong>Email:</strong></td>
+                <td style="padding: 8px 0; color: #1f2937; font-size: 14px;"><a href="mailto:${data.email}" style="color: #3b82f6;">${data.email}</a></td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-size: 14px;"><strong>Phone:</strong></td>
+                <td style="padding: 8px 0; color: #1f2937; font-size: 14px;">${data.phone}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; font-size: 14px;"><strong>City:</strong></td>
+                <td style="padding: 8px 0; color: #1f2937; font-size: 14px;">${data.city}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="background-color: #fefce8; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 15px 0; color: #92400e; font-size: 16px;">📋 Requirements</h3>
+            <p style="margin: 0; color: #1f2937; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${data.requirement}</p>
+          </div>
+
+          ${
+            data.message && data.message !== "Not provided"
+              ? `
+          <div style="background-color: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 20px;">
+            <h3 style="margin: 0 0 15px 0; color: #166534; font-size: 16px;">💬 Additional Message</h3>
+            <p style="margin: 0; color: #1f2937; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${data.message}</p>
+          </div>
+          `
+              : ""
+          }
+
+          <div style="margin-top: 25px; text-align: center;">
+            <a href="mailto:${data.email}?subject=Quote for ${data.businessName}" style="display: inline-block; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: #ffffff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Reply with Quote</a>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #1e293b; padding: 20px; text-align: center;">
+          <p style="color: #94a3b8; margin: 0; font-size: 12px;">This quote request was sent from the CopyTech.pk website</p>
+          <p style="color: #64748b; margin: 10px 0 0; font-size: 11px;">© ${new Date().getFullYear()} ${companyInfo.name}. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+// Send quote request email to admin
+const sendQuoteEmail = async (data) => {
+  try {
+    const mailOptions = {
+      from: `"${data.businessName}" <${companyInfo.email}>`,
+      replyTo: data.email,
+      to: companyInfo.adminEmail,
+      subject: `💼 B2B Quote Request from ${data.businessName} - ${data.contactPerson}`,
+      html: quoteEmailTemplate(data),
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("Quote request email sent:", result.messageId);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error("Error sending quote request email:", error);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   transporter,
   sendOrderConfirmation,
   sendOrderStatusUpdate,
   sendAdminNewOrderNotification,
   sendContactEmail,
+  sendQuoteEmail,
 };

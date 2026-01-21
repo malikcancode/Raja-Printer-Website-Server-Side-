@@ -71,6 +71,7 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/products", require("./routes/productRoutes"));
 app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/contact", require("./routes/contactRoutes"));
+app.use("/api/quote", require("./routes/quoteRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/api/newsletter", require("./routes/newsletterRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
