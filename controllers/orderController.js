@@ -508,20 +508,10 @@ exports.updateOrderStatus = async (req, res) => {
 // @access  Private
 exports.getUserOrders = async (req, res) => {
   try {
-    // Get user's email from the user object
-    const User = require("../models/User");
-    const user = await User.findById(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    // Find orders by user ID OR by user's email (for guest orders converted to user orders)
+    // Find orders by user ID only (not by email)
+    // This ensures users only see orders they placed while logged in
     const orders = await Order.find({
-      $or: [{ user: req.user.id }, { customerEmail: user.email }],
+      user: req.user.id,
     }).sort({
       createdAt: -1,
     });

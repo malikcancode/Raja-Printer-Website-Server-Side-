@@ -9,11 +9,16 @@ const {
   getUserOrders,
   deleteOrder,
 } = require("../controllers/orderController");
-const { protect, authorize } = require("../middlewares/authMiddleware");
+const {
+  protect,
+  authorize,
+  optionalAuth,
+} = require("../middlewares/authMiddleware");
 
 // Public routes
 router.post("/calculate-shipping", calculateShipping);
-router.post("/", createOrder);
+// Optional auth - attaches user if logged in, allows guest checkout
+router.post("/", optionalAuth, createOrder);
 
 // Protected routes - Must come before :id route
 router.get("/my-orders", protect, getUserOrders);
